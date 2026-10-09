@@ -17,6 +17,18 @@ console.log(isoDurationToWords('P3Y6D'));
 // Output: Three years and six days
 ```
 
+CommonJS works too:
+
+```js
+const { isoDurationToWords } = require('iso-duration-to-words');
+```
+
+### Behavior
+
+- Units with a value of zero are left out: `P1Y0M2D` gives `One year and two days`.
+- A duration where every unit is zero gives `Zero duration`.
+- Input that is not a valid ISO 8601 duration throws `Invalid ISO 8601 duration format`. This includes `P` and `PT` with no units, and a trailing `T` such as `P1DT`.
+
 ## 🧪 Testing
 
 ```bash
