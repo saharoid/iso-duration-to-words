@@ -1,10 +1,20 @@
-import numWords from 'num-words';
+import { locales } from './locales/index.js';
+import type { DurationUnit, Locale, Options } from './types.js';
+
+export type { DurationUnit, Locale, Options } from './types.js';
+export { locales, en, sr, de, es, it, fr } from './locales/index.js';
+
+/** Largest count any built-in locale can spell out. */
+export const MAX_VALUE = 999_999_999_999;
+
+const UNITS: DurationUnit[] = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second'];
 
 /**
  * Converts an ISO-8601 duration string to a human-readable sentence.
  * Example: 'P3Y6D' => 'Three years and six days'
+ * Example: isoDurationToWords('P3Y6D', { locale: 'sr' }) => 'Tri godine i šest dana'
  */
-export function isoDurationToWords(duration: string): string {
+export function isoDurationToWords(duration: string, options: Options = {}): string {
   const regex = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
   const match = duration.match(regex);
 
@@ -13,32 +23,32 @@ export function isoDurationToWords(duration: string): string {
     throw new Error('Invalid ISO 8601 duration format');
   }
 
-  const [ , years, months, weeks, days, hours, minutes, seconds ] = match;
+  const locale = resolveLocale(options.locale);
 
-  const units = [
-    { value: years, singular: 'year' },
-    { value: months, singular: 'month' },
-    { value: weeks, singular: 'week' },
-    { value: days, singular: 'day' },
-    { value: hours, singular: 'hour' },
-    { value: minutes, singular: 'minute' },
-    { value: seconds, singular: 'second' },
-  ];
-
-  const parts = units
-    .filter(unit => unit.value !== undefined && parseInt(unit.value, 10) !== 0)
-    .map(unit => {
-      const n = parseInt(unit.value!, 10);
-      const word = numWords(n); // keep it lowercase
-      return `${word} ${unit.singular}${n === 1 ? '' : 's'}`;
+  const parts = UNITS
+    .map((unit, i) => ({ unit, value: match[i + 1] }))
+    .filter(({ value }) => value !== undefined && Number(value) !== 0)
+    .map(({ unit, value }) => {
+      const n = Number(value);
+      if (n > MAX_VALUE) throw new RangeError(`Value ${value} is too large to spell out`);
+      return locale.formatUnit(n, unit);
     });
 
-  if (parts.length === 0) return 'Zero duration';
+  if (parts.length === 0) return capitalize(locale.zero);
   if (parts.length === 1) return capitalize(parts[0]);
 
   const last = parts.pop();
-  const result = parts.join(', ') + ' and ' + last;
-  return capitalize(result);
+  return capitalize(`${parts.join(', ')} ${locale.conjunction} ${last}`);
+}
+
+function resolveLocale(locale: string | Locale = 'en'): Locale {
+  if (typeof locale !== 'string') return locale;
+
+  // Accept full tags such as 'en-US' or 'sr-Latn-RS' by falling back to the language.
+  const code = locale.toLowerCase();
+  const found = locales[code] ?? locales[code.split('-')[0]];
+  if (!found) throw new Error(`Unsupported locale "${locale}"`);
+  return found;
 }
 
 // Helper to capitalize only the first letter

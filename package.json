@@ -1,7 +1,7 @@
 {
   "name": "iso-duration-to-words",
-  "version": "1.0.1",
-  "description": "Convert ISO 8601 duration strings into human-readable sentences.",
+  "version": "2.0.0",
+  "description": "Convert ISO 8601 duration strings into human-readable sentences in English, Serbian, German, Spanish, Italian and French.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
@@ -28,7 +28,10 @@
     "human-readable",
     "typescript",
     "date",
-    "time"
+    "time",
+    "i18n",
+    "localization",
+    "words"
   ],
   "author": "Branislav Jankovic",
   "license": "MIT",
@@ -39,9 +42,6 @@
   "homepage": "https://github.com/saharoid/iso-duration-to-words#readme",
   "bugs": {
     "url": "https://github.com/saharoid/iso-duration-to-words/issues"
-  },
-  "dependencies": {
-    "num-words": "^1.2.3"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
