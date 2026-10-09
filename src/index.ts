@@ -8,7 +8,10 @@ export function isoDurationToWords(duration: string): string {
   const regex = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
   const match = duration.match(regex);
 
-  if (!match) throw new Error('Invalid ISO 8601 duration format');
+  // ISO 8601 requires at least one component, and a 'T' must be followed by one.
+  if (!match || duration === 'P' || duration.endsWith('T')) {
+    throw new Error('Invalid ISO 8601 duration format');
+  }
 
   const [ , years, months, weeks, days, hours, minutes, seconds ] = match;
 
@@ -23,11 +26,11 @@ export function isoDurationToWords(duration: string): string {
   ];
 
   const parts = units
-    .filter(unit => unit.value)
+    .filter(unit => unit.value !== undefined && parseInt(unit.value, 10) !== 0)
     .map(unit => {
       const n = parseInt(unit.value!, 10);
       const word = numWords(n); // keep it lowercase
-      return `${word} ${unit.singular}${n > 1 ? 's' : ''}`;
+      return `${word} ${unit.singular}${n === 1 ? '' : 's'}`;
     });
 
   if (parts.length === 0) return 'Zero duration';
